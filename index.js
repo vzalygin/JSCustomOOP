@@ -1,9 +1,11 @@
-const fraction1 = New(Fraction(2, 3));
-const fraction2 = New(Fraction(1, 3));
-console.log(fraction1("GetType"));
-console.log(fraction1("Equals", fraction2));
-const fraction3 = fraction1("AddFraction", fraction2);
-console.log(fraction3("GetNumerator") + " " + fraction3("GetDenominator"));
+function Main() {
+    const fraction1 = New(Fraction(2, 3));
+    const fraction2 = New(Fraction(1, 3));
+    console.log(fraction1("GetType")());
+    console.log(fraction1("Equals")(fraction2));
+    const fraction3 = fraction1("AddFraction")(fraction2);
+    console.log(fraction3("GetNumerator")() + " " + fraction3("GetDenominator")());
+}
 
 function Fraction(numerator, denominator) { 
     const base = Extend(Obj()); // Применяем наследование от Obj
@@ -14,20 +16,20 @@ function Fraction(numerator, denominator) {
     const _denominator = denominator;
     const _type = "Fraction";
 
-    const public = base(GetPublicMap) // Забираем к себе публичные методы base
+    const public = base(GetPublicMap)() // Забираем к себе публичные методы base
         .set(GetNumerator, () => _numerator)
         .set(GetDenominator, () => _denominator)
         .set(AddFraction, (fraction) => {
-            const newDenom = This(Euclidean, denominator, fraction(GetDenominator));
+            const newDenom = This(Euclidean)(denominator, fraction(GetDenominator)());
             const newNum = numerator * newDenom / denominator 
-                + fraction(GetNumerator) * newDenom / fraction(GetDenominator);
+                + fraction(GetNumerator)() * newDenom / fraction(GetDenominator)();
             return New(Fraction(newNum, newDenom));
         })
-        .set(Equals, (obj) => This(TypeEquals, obj)
-            && numerator == obj(GetNumerator)
-            && denominator == obj(GetDenominator))
+        .set(Equals, (obj) => This(TypeEquals)(obj)
+            && numerator == obj(GetNumerator)()
+            && denominator == obj(GetDenominator)())
         .set(GetType, () => _type)
-    const protected = new Map(public, base(GetProtectedMap)) // Подключаем к себе протектед методы base (не забываем оверрайдить)
+    const protected = new Map(public, base(GetProtectedMap)()) // Подключаем к себе протектед методы base (не забываем оверрайдить)
         .set(Euclidean, (a, b) => {
             while (b != 0) {
                 const c = a;
@@ -39,9 +41,9 @@ function Fraction(numerator, denominator) {
     const private = protected;
     
     const [Public, Protected, This] = 
-    [(method, ...args) => base(Getter, public, method, args), // Почему base вместо This? Иначе в рекурсию уходит... В следующем наследнике прокатит?
-     (method, ...args) => base(Getter, protected, method, args),
-     (method, ...args) => base(Getter, private, method, args)];
+    [(method) => base(Getter)(public, method), // Почему base вместо This? Иначе в рекурсию уходит... В следующем наследнике прокатит?
+     (method) => base(Getter)(protected, method),
+     (method) => base(Getter)(private, method)];
 
     return [Public, Protected];
 }
@@ -52,17 +54,18 @@ function Obj() {
     const [GetType, TypeEquals, Equals, Getter, GetProtectedMap, GetPublicMap] = 
         ["GetType", "TypeEquals", "Equals", "Getter", "GetProtectedMap", "GetPublicMap"];
     const _type = "Object";
-    // Синтаксический сахар
-    const GetterMethod = (map, method, args) => {
-        if (map.has(method))
-            return map.get(method)(...args);
+    // Получение метода
+    const GetterMethod = (map, method) => {
+        if (map.has(method)) {
+            return map.get(method);
+        }
         throw new Error("Method " + method + " not found");
     }
     // Реализации методов
     const public = new Map()
         .set(GetType, () => _type)
-        .set(TypeEquals, (obj) => This(GetType) == obj(GetType))
-        .set(Equals, (obj) => This(TypeEquals, obj));
+        .set(TypeEquals, (obj) => This(GetType)() == obj(GetType)())
+        .set(Equals, (obj) => This(TypeEquals)(obj));
     const protected = public
         .set(Getter, GetterMethod)
         .set(GetProtectedMap, () => protected)
@@ -70,9 +73,9 @@ function Obj() {
     const private = protected;
 
     const [Public, Protected, This] = 
-        [(method, ...args) => GetterMethod(public, method, args),
-         (method, ...args) => GetterMethod(protected, method, args),
-         (method, ...args) => GetterMethod(private, method, args)];
+        [(method) => GetterMethod(public, method),
+         (method) => GetterMethod(protected, method),
+         (method) => GetterMethod(private, method)];
 
     return [Public, Protected];
 }
