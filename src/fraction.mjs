@@ -42,3 +42,5 @@ export function Fraction(numerator, denominator) {
 
     return [Public, Protected];
 }
+
+export { New, Extend };
