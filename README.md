@@ -1,4 +1,7 @@
 # JSCustomOOP
+```
+Work in progress...
+```
 
 ## Что здесь происходит?
 
